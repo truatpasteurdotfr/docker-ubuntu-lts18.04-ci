@@ -1,0 +1,20 @@
+image: registry-gitlab.pasteur.fr/dsi-tools/docker-images/docker:latest
+
+services:
+    - registry-gitlab.pasteur.fr/dsi-tools/docker-images/docker:dind
+stages:
+    - build
+
+build:
+  stage: build
+  script:
+    - docker login -u gitlab-ci-token -p "$CI_BUILD_TOKEN" registry-gitlab.pasteur.fr
+    - docker build --pull -t "$CI_REGISTRY_IMAGE:$CI_BUILD_REF_NAME" .
+    - docker push "$CI_REGISTRY_IMAGE:$CI_BUILD_REF_NAME"
+    - docker tag "$CI_REGISTRY_IMAGE:$CI_BUILD_REF_NAME" "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - docker tag  "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"  "$CI_REGISTRY_IMAGE:latest"
+    - docker push "$CI_REGISTRY_IMAGE:latest"
+    - export   MY_TIME=`date +"%F-%H%M"`
+    - docker tag  "$CI_REGISTRY_IMAGE:latest" "$CI_REGISTRY_IMAGE:$MY_TIME" 
+    - docker push "$CI_REGISTRY_IMAGE:$MY_TIME"
